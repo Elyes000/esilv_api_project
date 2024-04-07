@@ -122,3 +122,32 @@ def extract_entities(article_content):
 @app.route('/ml', methods=['GET'])
 @app.route('/ml/<int:number>', methods=['GET'])
 
+def ml_analysis(number=None):
+    if number is not None:
+        article = next((item for item in articles_data if item["id"] == number), None)
+        if article:
+            full_content = fetch_full_article_content(article['url'])
+            if full_content and not full_content.startswith("Failed"):
+                # Prendre les premiers 512 tokens pour éviter de dépasser la capacité du modèle
+                tokens = word_tokenize(full_content)[:512]
+                truncated_content = " ".join(tokens)
+                #Va analyser les mots les plus utilisés
+                trends = analyze_trends(full_content)
+                entities = extract_entities(full_content)
+
+                # Générer le résumé avec des paramètres ajustés pour éviter les erreurs
+                try:
+                    summary = summarizer(truncated_content, max_length=100, min_length=25, do_sample=False)[0]["summary_text"]
+                except Exception as e:
+                    return jsonify({"error": f"Erreur de génération du résumé : {str(e)}"})
+
+                return jsonify({"id": number, "summary": summary, "trends": trends, "entities": entities})
+            else:
+                return jsonify({"error": "Impossible de récupérer le contenu complet."}), 404
+        else:
+            return jsonify({"error": "Article non trouvé."}), 404
+    else:
+        return jsonify({"error": "Veuillez spécifier un numéro d'article."}), 400
+    
+if __name__ == '__main__':
+    app.run(debug=True)

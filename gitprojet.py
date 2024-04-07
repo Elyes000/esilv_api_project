@@ -1,9 +1,9 @@
-
 from flask import Flask, jsonify, request
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
 from transformers import pipeline
+
 import openai
 import nltk
 nltk.download('punkt')
@@ -24,10 +24,11 @@ ner = pipeline("ner")
 #OpenIA Key
 openai.api_key = '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'
 
-
+#API 
 NEWS_API_KEY = 'b795726f8b0b4da3ab52350844a3a901'
 NEWS_API_URL = 'https://newsapi.org/v2/everything'
 
+#récupérer les données des articles 
 def fetch_articles():
     articles_data.clear()
     
@@ -73,6 +74,7 @@ def articles():
 def article(number):
     # Find and return the article with the given ID
     article = next((item for item in articles_data if item["id"] == number), None)
+    
     if article:
         return jsonify(article)
     else:
@@ -98,7 +100,7 @@ def fetch_full_article_content(url):
         return "Failed to retrieve the webpage."
 
 
-
+#analyse sur les articles debut ml
 def analyze_trends(text):
     words = word_tokenize(text.lower())  # Tokenize le texte et le convertit en minuscules
     filtered_words = [word for word in words if word.isalnum()]  # Enlève la ponctuation
